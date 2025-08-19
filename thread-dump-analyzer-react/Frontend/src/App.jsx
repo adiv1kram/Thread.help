@@ -32,27 +32,24 @@ function App() {
         formData.append('dumpfile', selectedFile);
 
         try {
-            await new Promise(resolve => setTimeout(resolve, 1500)); 
-            
-            const mockResponse = {
-                summary: "The application is experiencing severe thread contention.",
-                diagnosis: [
-                    {
-                        problem: "Deadlock Detected",
-                        details: "Threads 'Thread-A' and 'Thread-B' are in a deadlock.",
-                        evidence: "Thread 'Thread-A' waiting for lock <0x001> held by 'Thread-B', while 'Thread-B' is waiting for lock <0x002> held by 'Thread-A'."
-                    }
-                ],
-                recommendations: [
-                    "Review synchronization blocks for 'com.example.ResourceA' and 'com.example.ResourceB' to ensure consistent lock acquisition order.",
-                    "Consider using java.util.concurrent locks with timeouts to prevent indefinite blocking."
-                ]
-            };
-            
-            setResult(JSON.stringify(mockResponse, null, 2));
+            // This is the REAL fetch call to your backend.
+            const response = await fetch('http://127.0.0.1:5000/analyze', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.ok) {
+                // If the server responds with an error (e.g., 400, 500), handle it.
+                const errorData = await response.json();
+                throw new Error(errorData.error || `Server error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            setResult(JSON.stringify(data, null, 2));
 
         } catch (err) {
-            setError('Failed to analyze the file. Please try again.');
+            // This will catch network errors (like server not running) or errors thrown above.
+            setError(`Connection failed: ${err.message}. Is the backend server running?`);
         } finally {
             setIsLoading(false);
         }
