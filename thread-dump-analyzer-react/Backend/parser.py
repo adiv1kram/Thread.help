@@ -2,21 +2,30 @@ import re
 import json
 
 def parse_thread_dump(dump_content):
+    """
+    Parses a raw Java thread dump string into a structured list of threads.
+    This version is corrected to handle thread dumps with or without 'os_prio'.
+
+    Args:
+        dump_content (str): The raw string content of the thread dump file.
+
+    Returns:
+        list: A list of dictionaries, where each dictionary represents a thread.
+    """
     
-    
-    # This list is initialized at the start to ensure it always exists.
     threads = []
     current_thread = None
     
-    # Regex to capture the main information line for a thread
+    # Regex to capture the main information line for a thread.
+  
     thread_header_re = re.compile(
         r'"(?P<name>.*?)".*?'
         r'prio=(?P<prio>\d+)\s+'
-        r'os_prio=(?P<os_prio>\d+)\s+'
+        r'(os_prio=(?P<os_prio>\d+)\s+)?'  
         r'tid=(?P<tid>0x[0-9a-fA-F]+)\s+'
         r'nid=(?P<nid>0x[0-9a-fA-F]+)\s+'
         r'(?P<state>[\w\s\(\)]+?)\s+'
-        r'\[(?P<address>0x[0-9a-fA-F]+)\]'
+        r'(\[(?P<address>0x[0-9a-fA-F]+)\])?' 
     )
     
     java_lang_thread_state_re = re.compile(r'^\s+java.lang.Thread.State:\s+(?P<java_state>\w+.*)')
@@ -55,11 +64,11 @@ def parse_thread_dump(dump_content):
     if current_thread:
         threads.append(current_thread)
         
-    # The function now correctly returns the (potentially empty) list.
     return threads
 
 if __name__ == '__main__':
     try:
+        # A simple test case to run this file directly(for testing purposes only)
         with open('test_dumps/sample_dump.txt', 'r') as f:
             content = f.read()
             parsed_data = parse_thread_dump(content)

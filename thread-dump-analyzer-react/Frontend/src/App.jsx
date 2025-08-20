@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import ReactMarkdown from 'react-markdown'; // Import the markdown component
 import './App.css';
-import Starfield from './Starfield'; // Import the Starfield component
+import Starfield from './Starfield';
 
 function App() {
     const [selectedFile, setSelectedFile] = useState(null);
@@ -12,7 +13,7 @@ function App() {
         const file = event.target.files[0];
         if (file) {
             setSelectedFile(file);
-            setResult(''); // Clear previous results
+            setResult('');
             setError('');
         }
     };
@@ -32,24 +33,22 @@ function App() {
         formData.append('dumpfile', selectedFile);
 
         try {
-            // This is the REAL fetch call to your backend.
             const response = await fetch('http://127.0.0.1:5000/analyze', {
                 method: 'POST',
                 body: formData,
             });
 
-            if (!response.ok) {
-                // If the server responds with an error (e.g., 400, 500), handle it.
-                const errorData = await response.json();
-                throw new Error(errorData.error || `Server error: ${response.status}`);
-            }
-
             const data = await response.json();
-            setResult(JSON.stringify(data, null, 2));
+
+            if (!response.ok) {
+                throw new Error(data.error || `Server error: ${response.status}`);
+            }
+            
+            //To extract the 'analysis' field from the JSON response
+            setResult(data.analysis);
 
         } catch (err) {
-            // This will catch network errors (like server not running) or errors thrown above.
-            setError(`Connection failed: ${err.message}. Is the backend server running?`);
+            setError(`Connection failed: ${err.message}. Is the backend server running with a valid API key?`);
         } finally {
             setIsLoading(false);
         }
@@ -103,7 +102,8 @@ function App() {
                         {result && (
                              <div className="result-content">
                                 <h2>Analysis Result</h2>
-                                <pre><code>{result}</code></pre>
+                                {/* Use ReactMarkdown to render the result */}
+                                <ReactMarkdown>{result}</ReactMarkdown>
                             </div>
                         )}
                     </div>
